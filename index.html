@@ -2,48 +2,83 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تحليل مكونات الطعام</title>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <title>تحليل مكونات الطبق</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    #label-container div { margin: 6px 0; font-size: 18px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #preview {
+      max-width: 300px;
+      margin-top: 15px;
+      border-radius: 10px;
+    }
+    #label-container div {
+      margin: 6px 0;
+      font-size: 18px;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>🔍 تحليل مكونات الطبق</h1>
-  <input type="file" id="imageUpload" accept="image/*" /><br><br>
-  <img id="preview" width="300"/><br><br>
+
+  <input type="file" id="imageUpload" accept="image/*" class="btn">
+  <br>
+  <img id="preview" src="" alt="صورة الطبق" />
+  <br>
+  <button class="btn" onclick="analyzeImage()">تحليل الطبق</button>
+
   <div id="label-container"></div>
 
-  <script type="text/javascript">
+  <script>
     const URL = "./food-model/";
     let model, maxPredictions;
+    let selectedImage = null;
 
-    async function init() {
+    // تحميل النموذج
+    async function loadModel() {
       model = await tmImage.load(URL + "model.json", URL + "metadata.json");
       maxPredictions = model.getTotalClasses();
     }
 
-    document.getElementById("imageUpload").addEventListener("change", async function () {
+    loadModel(); // تحميل النموذج عند بداية الصفحة
+
+    // عند اختيار صورة
+    document.getElementById("imageUpload").addEventListener("change", function () {
       const file = this.files[0];
       if (!file) return;
+      selectedImage = file;
 
       const img = document.getElementById("preview");
       img.src = URL.createObjectURL(file);
-      await img.onload;
+    });
 
+    // تحليل الصورة عند الضغط على الزر
+    async function analyzeImage() {
+      if (!selectedImage || !model) return;
+
+      const img = document.getElementById("preview");
+      await img.decode?.(); // للتأكد من تحميل الصورة (بعض المتصفحات)
       const prediction = await model.predict(img);
+      prediction.sort((a, b) => b.probability - a.probability);
+
       const labelContainer = document.getElementById("label-container");
       labelContainer.innerHTML = "";
-      prediction.sort((a, b) => b.probability - a.probability);
 
       prediction.forEach(p => {
         const percent = (p.probability * 100).toFixed(1);
         labelContainer.innerHTML += `<div>${p.className}: <strong>${percent}%</strong></div>`;
       });
-    });
-
-    init();
+    }
   </script>
 </body>
 </html>

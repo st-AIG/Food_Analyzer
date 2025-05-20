@@ -40,34 +40,48 @@
   <div id="label-container"></div>
 
   <script>
-    const URL = "./food-model/";
-    let model, maxPredictions;
-    let selectedImage = null;
+  const URL = "./food-model/";
+  let model, maxPredictions;
+  let selectedImage = null;
 
-    // تحميل النموذج
-    async function loadModel() {
+  async function loadModel() {
+    try {
       model = await tmImage.load(URL + "model.json", URL + "metadata.json");
       maxPredictions = model.getTotalClasses();
+      console.log("✅ النموذج تم تحميله بنجاح");
+    } catch (err) {
+      console.error("❌ فشل تحميل النموذج:", err);
+    }
+  }
+
+  loadModel(); // تحميل النموذج عند بداية الصفحة
+
+  document.getElementById("imageUpload").addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    selectedImage = file;
+
+    const img = document.getElementById("preview");
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      console.log("✅ الصورة تم تحميلها بنجاح");
+    };
+  });
+
+  async function analyzeImage() {
+    const img = document.getElementById("preview");
+
+    if (!selectedImage) {
+      alert("الرجاء اختيار صورة أولاً.");
+      return;
+    }
+    if (!model) {
+      alert("النموذج لم يتم تحميله بعد.");
+      return;
     }
 
-    loadModel(); // تحميل النموذج عند بداية الصفحة
-
-    // عند اختيار صورة
-    document.getElementById("imageUpload").addEventListener("change", function () {
-      const file = this.files[0];
-      if (!file) return;
-      selectedImage = file;
-
-      const img = document.getElementById("preview");
-      img.src = URL.createObjectURL(file);
-    });
-
-    // تحليل الصورة عند الضغط على الزر
-    async function analyzeImage() {
-      if (!selectedImage || !model) return;
-
-      const img = document.getElementById("preview");
-      await img.decode?.(); // للتأكد من تحميل الصورة (بعض المتصفحات)
+    try {
       const prediction = await model.predict(img);
       prediction.sort((a, b) => b.probability - a.probability);
 
@@ -78,7 +92,13 @@
         const percent = (p.probability * 100).toFixed(1);
         labelContainer.innerHTML += `<div>${p.className}: <strong>${percent}%</strong></div>`;
       });
+
+      console.log("✅ التحليل اكتمل");
+    } catch (err) {
+      console.error("❌ فشل التحليل:", err);
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>

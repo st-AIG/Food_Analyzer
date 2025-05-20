@@ -7,8 +7,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
-    #label-container div { margin: 6px 0; font-size: 18px; }
     #preview { max-width: 300px; margin-top: 15px; border-radius: 10px; }
+    #label-container div { margin: 6px 0; font-size: 18px; }
     .btn { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; }
   </style>
 </head>
@@ -20,16 +20,19 @@
   <img id="preview" src="" alt="صورة الطبق" /><br>
   <div id="label-container"></div>
 
-  <script>
+  <script type="text/javascript">
     const URL = "https://teachablemachine.withgoogle.com/models/cU_kTJDad/";
     let model, maxPredictions;
 
-    async function init() {
-      model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+    async function loadModel() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
       maxPredictions = model.getTotalClasses();
+      console.log("✅ تم تحميل النموذج");
     }
 
-    init();
+    loadModel();
 
     document.getElementById("imageUpload").addEventListener("change", function () {
       const file = this.files[0];

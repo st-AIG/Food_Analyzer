@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تحليل مكونات الطعام</title>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #label-container div { margin: 6px 0; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 تحليل مكونات الطبق</h1>
+  <input type="file" id="imageUpload" accept="image/*" /><br><br>
+  <img id="preview" width="300"/><br><br>
+  <div id="label-container"></div>
+
+  <script type="text/javascript">
+    const URL = "./tm-my-image-model/";
+    let model, maxPredictions;
+
+    async function init() {
+      model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+      maxPredictions = model.getTotalClasses();
+    }
+
+    document.getElementById("imageUpload").addEventListener("change", async function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const img = document.getElementById("preview");
+      img.src = URL.createObjectURL(file);
+      await img.onload;
+
+      const prediction = await model.predict(img);
+      const labelContainer = document.getElementById("label-container");
+      labelContainer.innerHTML = "";
+      prediction.sort((a, b) => b.probability - a.probability);
+
+      prediction.forEach(p => {
+        const percent = (p.probability * 100).toFixed(1);
+        labelContainer.innerHTML += `<div>${p.className}: <strong>${percent}%</strong></div>`;
+      });
+    });
+
+    init();
+  </script>
+</body>
+</html>
